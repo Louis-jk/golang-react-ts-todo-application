@@ -1,34 +1,68 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import './App.css'
+import { useState } from 'react';
+import './App.css';
+import { Box, List, ThemeIcon } from '@mantine/core';
+import useSWR from 'swr';
+import AddTodos from './components/AddTodos';
+import { CheckCircleFillIcon, CheckCircleIcon } from '@primer/octicons-react';
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </div>
-  )
+export interface ITodo {
+  id: number;
+  title: string;
+  body: string;
+  done: boolean;
 }
 
-export default App
+export const ENDPOINT = 'http://localhost:3000';
+
+const fetcher = (url: string) =>
+  fetch(`${ENDPOINT}/${url}`).then((r) => r.json());
+
+function App() {
+  const { data, mutate } = useSWR<ITodo[]>('api/todos', fetcher);
+
+  async function markTodoAddDone(id: number) {
+    const updated = await fetch(`${ENDPOINT}/api/todos/${id}/done`, {
+      method: 'PATCH',
+    }).then((r) => r.json());
+
+    mutate(updated);
+  }
+
+  return (
+    <Box
+      sx={(theme) => ({
+        padding: '2rem',
+        width: '100%',
+        maxWidth: '40rem',
+        margin: '0 auto',
+      })}
+    >
+      <List spacing="xs" size="sm" mb={12} center>
+        {data?.map((todo) => {
+          return (
+            <List.Item
+              key={`todo_list__${todo.id}`}
+              onClick={() => markTodoAddDone(todo.id)}
+              icon={
+                todo.done ? (
+                  <ThemeIcon color="teal" size={24} radius="xl">
+                    <CheckCircleFillIcon size={20} />
+                  </ThemeIcon>
+                ) : (
+                  <ThemeIcon color="gray" size={24} radius="xl">
+                    <CheckCircleFillIcon size={20} />
+                  </ThemeIcon>
+                )
+              }
+            >
+              {todo.title}
+            </List.Item>
+          );
+        })}
+      </List>
+      <AddTodos mutate={mutate} />
+    </Box>
+  );
+}
+
+export default App;
