@@ -1,8 +1,9 @@
 package main
 
 import (
-	"log"
 	"fmt"
+	"log"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -62,8 +63,6 @@ func main(){
 	})
 
 	app.Get("/api/todos", func(c *fiber.Ctx) error {
-		todos := &[]Todo{}
-
 		return c.JSON(todos)
 	})
 
